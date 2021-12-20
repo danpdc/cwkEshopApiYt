@@ -1,6 +1,8 @@
 ﻿using CwkEshop.Api.Services;
+using CwkEshop.Dal;
 using CwkEshop.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CwkEshop.Api.Controllers.V1
 {
@@ -10,67 +12,72 @@ namespace CwkEshop.Api.Controllers.V1
     public class ProductsController : ControllerBase
     {
 
-        private readonly ProductService _productService;
+        private readonly DataContext _ctx;
 
-        public ProductsController(ProductService productService)
+        public ProductsController(DataContext ctx)
         {
-            _productService = productService;
+            _ctx = ctx;
         }
         
         [HttpGet]
-        public IActionResult GetProducts()
+        public async Task<IActionResult> GetProducts()
         {
-            var products = _productService.Products;
+            var products = await _ctx.Products.ToListAsync();
 
             return Ok(products);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetProductById(int id)
+        public async Task<IActionResult> GetProductById(int id)
         {
-            var product = _productService.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _ctx.Products.FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
-                return BadRequest("Product not found");
+                return NotFound("Product not found");
 
             return Ok(product);
         }
 
         [HttpPost]
-        public IActionResult CreateProduct([FromBody] Product product)
+        public async Task<IActionResult> CreateProduct([FromBody] Product product)
         {
-            _productService.Products.Add(product);
+            _ctx.Products.Add(product);
+            await _ctx.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetProductById), new { id = product.Id}, product);
         }
 
         [HttpPut]
         [Route("{id}")]
-        public IActionResult UpdateProduct(int id, [FromBody] Product updatedProduct)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product updatedProduct)
         {
-            var oldProduct = _productService.Products.FirstOrDefault( p => p.Id == id);
+            var oldProduct = await _ctx.Products.FirstOrDefaultAsync( p => p.Id == id);
 
             if (oldProduct == null)
-                return BadRequest("Product not found");
+                return NotFound("Product not found");
 
             oldProduct.Name = updatedProduct.Name;
             oldProduct.Price = updatedProduct.Price;
             oldProduct.AvailableQuantity = updatedProduct.AvailableQuantity;
+
+            _ctx.Products.Update(oldProduct);
+            await _ctx.SaveChangesAsync();
 
             return NoContent();
         }
 
         [HttpDelete]
         [Route("{id}")]
-        public IActionResult DeleteProduct(int id)
+        public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = _productService.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _ctx.Products.FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
-                return BadRequest("Product not found");
+                return NotFound("Product not found");
 
-            _productService.Products.Remove(product);
+            _ctx.Products.Remove(product);
+            await _ctx.SaveChangesAsync();
 
             return NoContent();
         }
