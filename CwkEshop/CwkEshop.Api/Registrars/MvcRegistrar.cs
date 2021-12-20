@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CwkEshop.Api.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 
 namespace CwkEshop.Api.Registrars
@@ -22,6 +23,8 @@ namespace CwkEshop.Api.Registrars
                 setup.GroupNameFormat = "'v'VVV";
                 setup.SubstituteApiVersionInUrl = true;
             });
+
+            builder.Services.AddSingleton<ProductService>();
         }
     }
 }
